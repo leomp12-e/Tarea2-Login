@@ -1,12 +1,12 @@
 package com.example.loginapp
 
+import android.content.Context
 import android.util.Patterns
-import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -26,21 +27,19 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
-import android.R.attr.checked
-import android.service.autofill.OnClickAction
-import android.content.Context
-import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.android.awaitFrame
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: (String) -> Unit,
+    onGoToRegister: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var emailError by remember { mutableStateOf<String?>(null) }
     var passwordError by remember { mutableStateOf<String?>(null) }
     var showPassword by remember { mutableStateOf(false) }
-
+    var checked by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
     val emailFocusRequester = remember { FocusRequester() }
@@ -50,19 +49,29 @@ fun LoginScreen(
         emailFocusRequester.requestFocus()
     }
 
-    fun validarEmail(email : String, context: Context): Boolean {
+    fun validarEmail(email: String, context: Context): Boolean {
         val emailValido = email.isNotBlank() &&
                 Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
-        emailError =  if (!emailValido) context.getString(R.string.error_email) else null
+
+        emailError = if (!emailValido) {
+            context.getString(R.string.error_email)
+        } else {
+            null
+        }
+
         return emailValido
     }
 
-    fun validarPassword(password : String, context: Context): Boolean {
+    fun validarPassword(password: String, context: Context): Boolean {
         val regex = "^(?=.*[A-Z])(?=.*[0-9]).{8,}$".toRegex()
         val passValida = regex.matches(password)
+
         passwordError = if (!passValida) {
             context.getString(R.string.error_password)
-        } else null
+        } else {
+            null
+        }
+
         return passValida
     }
 
@@ -77,7 +86,9 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(48.dp))
 
         Icon(
-            painter = painterResource(id = R.drawable.ic_launcher_foreground),
+            painter = painterResource(
+                id = R.drawable.ic_launcher_foreground
+            ),
             contentDescription = stringResource(R.string.logo_desc),
             modifier = Modifier.size(120.dp)
         )
@@ -95,11 +106,22 @@ fun LoginScreen(
             value = email,
             onValueChange = {
                 email = it
-                if (it.isNotEmpty()) validarEmail(it, context)
+                if (it.isNotEmpty()) {
+                    validarEmail(it, context)
+                } else {
+                    emailError = null
+                }
             },
-            label = { Text(stringResource(R.string.hint_email)) },
+            label = {
+                Text(stringResource(R.string.hint_email))
+            },
             isError = emailError != null,
-            supportingText = emailError?.let { { Text(it) } },
+            supportingText = {
+                emailError?.let {
+                    Text(it)
+                }
+            },
+            singleLine = true,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next
@@ -120,25 +142,42 @@ fun LoginScreen(
             value = password,
             onValueChange = {
                 password = it
-                if (it.isNotEmpty()) validarPassword(it, context)
+                if (it.isNotEmpty()) {
+                    validarPassword(it, context)
+                } else {
+                    passwordError = null
+                }
             },
-            label = { Text(stringResource(R.string.hint_password)) },
+            label = {
+                Text(stringResource(R.string.hint_password))
+            },
             isError = passwordError != null,
-            supportingText = passwordError?.let { { Text(it) } },
+            supportingText = {
+                passwordError?.let {
+                    Text(it)
+                }
+            },
+            singleLine = true,
             visualTransformation = if (showPassword) {
                 VisualTransformation.None
             } else {
                 PasswordVisualTransformation()
             },
             trailingIcon = {
-                IconButton(onClick = { showPassword = !showPassword }) {
+                IconButton(
+                    onClick = {
+                        showPassword = !showPassword
+                    }
+                ) {
                     Icon(
                         imageVector = if (showPassword) {
                             Icons.Filled.Visibility
                         } else {
                             Icons.Filled.VisibilityOff
                         },
-                        contentDescription = stringResource(R.string.toggle_password)
+                        contentDescription = stringResource(
+                            R.string.toggle_password
+                        )
                     )
                 }
             },
@@ -156,16 +195,17 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        var checked by remember{mutableStateOf(false)}
-
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
             Checkbox(
                 checked = checked,
-                onCheckedChange = { checked = it }
+                onCheckedChange = {
+                    checked = it
+                }
             )
+
             Text(stringResource(R.string.recordar_sesion))
         }
 
@@ -175,9 +215,10 @@ fun LoginScreen(
             onClick = {
                 val emailOk = validarEmail(email, context)
                 val passOk = validarPassword(password, context)
+
                 if (emailOk && passOk) {
                     focusManager.clearFocus()
-                    onLoginSuccess()
+                    onLoginSuccess(email.trim())
                 }
             },
             modifier = Modifier.fillMaxWidth()
@@ -187,8 +228,10 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        TextButton(onClick = { /* Acción */ }, modifier = Modifier.align(Alignment.End)) {
-            Text(stringResource(R.string.olvidaste_password))
+        TextButton(
+            onClick = onGoToRegister
+        ) {
+            Text(stringResource(R.string.ya_tienes_cuenta))
         }
     }
 }
@@ -197,6 +240,9 @@ fun LoginScreen(
 @Composable
 fun LoginScreenPreview() {
     MaterialTheme {
-        LoginScreen(onLoginSuccess = {})
+        LoginScreen(
+            onLoginSuccess = {},
+            onGoToRegister = {}
+        )
     }
 }
