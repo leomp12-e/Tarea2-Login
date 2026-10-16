@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -25,6 +26,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import android.content.Context
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,6 +34,8 @@ fun RegisterScreen(
     onRegisterSuccess: (String) -> Unit,   // Recibe el email para pasarlo a Home
     onBackToLogin: () -> Unit
 ) {
+
+    val context = LocalContext.current
     // ---------------------------------------------------------
     // 1. ESTADO
     // ---------------------------------------------------------
@@ -61,30 +65,30 @@ fun RegisterScreen(
     // ---------------------------------------------------------
     // 3. VALIDACIONES
     // ---------------------------------------------------------
-    fun validarEmail(): Boolean {
+    fun validarEmail(context: Context): Boolean {
         val ok = email.isNotBlank() &&
                 Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
-        emailError = if (!ok) "Introduce un email válido" else null
+        emailError = if (!ok) context.getString(R.string.valid_mail) else null
         return ok
     }
 
-    fun validarPassword(): Boolean {
+    fun validarPassword(context: Context): Boolean {
         val regex = "^(?=.*[A-Z])(?=.*[0-9]).{8,}$".toRegex()
         val ok = regex.matches(password)
         passwordError = if (!ok) {
-            "Mínimo 8 caracteres, una mayúscula y un número"
+            context.getString(R.string.unvalid_passwd)
         } else null
         return ok
     }
 
-    fun validarConfirm(): Boolean {
+    fun validarConfirm(context: Context): Boolean {
         val ok = confirmPassword == password && confirmPassword.isNotEmpty()
-        confirmError = if (!ok) "Las contraseñas no coinciden" else null
+        confirmError = if (!ok) context.getString(R.string.unmatch_passwd) else null
         return ok
     }
 
-    fun validarTerminos(): Boolean {
-        termsError = if (!acceptTerms) "Debes aceptar los términos" else null
+    fun validarTerminos(context: Context): Boolean {
+        termsError = if (!acceptTerms) context.getString(R.string.must_accept_terms) else null
         return acceptTerms
     }
 
@@ -129,7 +133,7 @@ fun RegisterScreen(
                 value = email,
                 onValueChange = {
                     email = it
-                    if (it.isNotEmpty()) validarEmail()
+                    if (it.isNotEmpty()) validarEmail(context)
                 },
                 label = { Text(stringResource(R.string.hint_email)) },
                 isError = emailError != null,
@@ -153,9 +157,9 @@ fun RegisterScreen(
                 value = password,
                 onValueChange = {
                     password = it
-                    if (it.isNotEmpty()) validarPassword()
+                    if (it.isNotEmpty()) validarPassword(context)
                     // Si ya había confirmación escrita, revalidamos
-                    if (confirmPassword.isNotEmpty()) validarConfirm()
+                    if (confirmPassword.isNotEmpty()) validarConfirm(context)
                 },
                 label = { Text(stringResource(R.string.hint_password)) },
                 isError = passwordError != null,
@@ -194,7 +198,7 @@ fun RegisterScreen(
                 value = confirmPassword,
                 onValueChange = {
                     confirmPassword = it
-                    if (it.isNotEmpty()) validarConfirm()
+                    if (it.isNotEmpty()) validarConfirm(context)
                 },
                 label = { Text(stringResource(R.string.hint_confirm_password)) },
                 isError = confirmError != null,
@@ -256,10 +260,10 @@ fun RegisterScreen(
             // --- Botón Crear cuenta ---
             Button(
                 onClick = {
-                    val emailOk = validarEmail()
-                    val passOk = validarPassword()
-                    val confirmOk = validarConfirm()
-                    val termsOk = validarTerminos()
+                    val emailOk = validarEmail(context)
+                    val passOk = validarPassword(context)
+                    val confirmOk = validarConfirm(context)
+                    val termsOk = validarTerminos(context)
                     if (emailOk && passOk && confirmOk && termsOk) {
                         focusManager.clearFocus()
                         onRegisterSuccess(email.trim())

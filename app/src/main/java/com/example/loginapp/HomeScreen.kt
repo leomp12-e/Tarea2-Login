@@ -73,7 +73,7 @@ fun HomeScreen(
         ) {
             Text(
                 text = if (userEmail.isNotEmpty()) {
-                    stringResource(R.string.home_bienvenida, userEmail)
+                    stringResource(R.string.home_bienvenida,  userEmail)
                 } else {
                     stringResource(R.string.home_sin_email)
                 },

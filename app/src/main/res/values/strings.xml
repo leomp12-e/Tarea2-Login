@@ -33,4 +33,10 @@
     <string name="dialog_aceptar">Aceptar</string>
     <string name="dialog_cancelar">Cancelar</string>
     <string name="abrir_menu">Abrir menú</string>
+
+
+    <string name="valid_mail">Introduce un email válido</string>
+    <string name="unvalid_passwd">Mínimo 8 caracteres, una mayúscula y un número</string>
+    <string name="unmatch_passwd">Las contraseñas no coinciden</string>
+    <string name="must_accept_terms">Debes aceptar los términos</string>
 </resources>
