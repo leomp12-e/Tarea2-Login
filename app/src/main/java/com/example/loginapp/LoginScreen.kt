@@ -31,7 +31,7 @@ import kotlinx.coroutines.android.awaitFrame
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: (String) -> Unit,
+    onLoginSuccess: (String, Boolean) -> Unit,
     onGoToRegister: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
@@ -40,6 +40,7 @@ fun LoginScreen(
     var passwordError by remember { mutableStateOf<String?>(null) }
     var showPassword by remember { mutableStateOf(false) }
     var checked by remember { mutableStateOf(false) }
+    var rememberSession by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
     val emailFocusRequester = remember { FocusRequester() }
@@ -200,9 +201,9 @@ fun LoginScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Checkbox(
-                checked = checked,
+                checked = rememberSession,
                 onCheckedChange = {
-                    checked = it
+                    rememberSession = it
                 }
             )
 
@@ -218,7 +219,7 @@ fun LoginScreen(
 
                 if (emailOk && passOk) {
                     focusManager.clearFocus()
-                    onLoginSuccess(email.trim())
+                    onLoginSuccess(email.trim(), rememberSession)
                 }
             },
             modifier = Modifier.fillMaxWidth()
@@ -241,7 +242,7 @@ fun LoginScreen(
 fun LoginScreenPreview() {
     MaterialTheme {
         LoginScreen(
-            onLoginSuccess = {},
+            onLoginSuccess = {_, _ ->},
             onGoToRegister = {}
         )
     }
