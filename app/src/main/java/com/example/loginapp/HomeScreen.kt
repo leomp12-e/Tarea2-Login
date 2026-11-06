@@ -25,6 +25,7 @@ import androidx.core.content.ContextCompat
 
 
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -354,6 +355,10 @@ private fun VideojuegoFormDialog(
     var anyoError by remember { mutableStateOf<String?>(null) }
     var notaError by remember { mutableStateOf<String?>(null) }
 
+    val errorTitulo = stringResource(R.string.error_titulo_vacio)
+    val errorAnyo = stringResource(R.string.error_anyo_invalido)
+    val errorNota = stringResource(R.string.error_nota_invalida)
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -436,15 +441,15 @@ private fun VideojuegoFormDialog(
             TextButton(onClick = {
                 // Validaciones
                 val tituloOk = titulo.isNotBlank()
-                tituloError = if (!tituloOk) "El título no puede estar vacío" else null
+                tituloError = if (!tituloOk) errorTitulo else null
 
                 val anyoInt = anyo.toIntOrNull()
                 val anyoOk = anyoInt != null && anyoInt in 1950..2100
-                anyoError = if (!anyoOk) "Introduce un año válido" else null
+                anyoError = if (!anyoOk) errorAnyo else null
 
                 val notaFloat = nota.replace(',', '.').toFloatOrNull()
                 val notaOk = notaFloat != null && notaFloat in 0f..10f
-                notaError = if (!notaOk) "La nota debe estar entre 0 y 10" else null
+                notaError = if (!notaOk) errorNota else null
 
                 if (tituloOk && anyoOk && notaOk) {
                     onSave(
